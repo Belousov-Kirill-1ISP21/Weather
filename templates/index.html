@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Погода</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d3436;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        #cityInput {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #cityInput:focus {
+            border-color: #74b9ff;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: #00b894;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #00a085;
+        }
+
+        button:disabled {
+            background: #b2bec3;
+            cursor: not-allowed;
+        }
+
+        .weather-info {
+            margin-top: 20px;
+        }
+
+        .city-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2d3436;
+        }
+
+        .weather-table {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #2d3436;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .forecast {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            color: #d63031;
+            text-align: center;
+            padding: 20px;
+            background: #ffeaa7;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #636e72;
+        }
+
+        @media (max-width: 600px) {
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤 Погода</h1>
+        
+        <div class="search-box">
+            <input type="text" id="cityInput" placeholder="Введите город (например: Moscow, London, Tokyo)...">
+            <button id="getWeatherBtn" onclick="getWeather()">Получить погоду</button>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <p>🔍 Ищем город и загружаем данные...</p>
+        </div>
+
+        <div id="error" class="error hidden"></div>
+
+        <div id="weatherResult" class="hidden">
+            <div class="city-header">
+                <h2 id="cityName"></h2>
+            </div>
+            
+            <div class="weather-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Макс. температура</th>
+                            <th>Мин. температура</th>
+                            <th>Осадки (мм)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weatherBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="forecast">
+                <h3>📊 Прогноз на завтра</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
+                    <div>
+                        <p><strong>Максимальная:</strong> <span id="forecastMax">-</span>°C</p>
+                        <p><strong>Минимальная:</strong> <span id="forecastMin">-</span>°C</p>
+                    </div>
+                    <div>
+                        <p><strong>Средняя:</strong> <span id="forecastAvg">-</span>°C</p>
+                        <p><strong>Осадки:</strong> <span id="forecastPrecip">-</span> мм</p>
+                    </div>
+                </div>
+                
+                <div style="border-top: 1px solid #ccc; padding-top: 15px; margin-top: 15px;">
+                    <h4>📈 Анализ за <span id="daysCount">-</span> дней</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                        <div>
+                            <p><strong>Температура:</strong></p>
+                            <p>Средняя: <span id="avgTemp">-</span>°C</p>
+                            <p>Макс/мин: <span id="maxTemp">-</span>°C / <span id="minTemp">-</span>°C</p>
+                            <p>Тенденция: <span id="trend">-</span></p>
+                        </div>
+                        <div>
+                            <p><strong>Осадки:</strong></p>
+                            <p>Дней с дождем: <span id="rainyDays">-</span></p>
+                            <p>Всего осадков: <span id="totalPrecip">-</span> мм</p>
+                            <p>Макс в день: <span id="maxDailyPrecip">-</span> мм</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function getWeather() {
+            const cityInput = document.getElementById('cityInput').value.trim();
+            const button = document.getElementById('getWeatherBtn');
+            
+            if (!cityInput) {
+                showError('Введите название города');
+                return;
+            }
+
+            showLoading();
+            button.disabled = true;
+
+            try {
+                // Для статического хостинга - делаем всё на клиенте
+                const weatherData = await getWeatherData(cityInput);
+                displayWeather(weatherData);
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+                button.disabled = false;
+            }
+        }
+
+        async function getWeatherData(cityName) {
+            // 1. Получаем координаты города
+            const coords = await getCityCoordinates(cityName);
+            if (!coords) {
+                throw new Error('Город не найден');
+            }
+
+            // 2. Получаем исторические данные погоды
+            const weatherData = await getHistoricalWeather(coords.lat, coords.lon);
+            if (!weatherData) {
+                throw new Error('Не удалось получить данные о погоде');
+            }
+
+            // 3. Анализируем данные на клиенте
+            const analysis = analyzeWeatherData(weatherData);
+            
+            return {
+                city_name: coords.name,
+                country: coords.country,
+                weather_data: formatWeatherData(weatherData),
+                analysis: analysis
+            };
+        }
+
+        async function getCityCoordinates(cityName) {
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=ru&format=json`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.results && data.results.length > 0) {
+                return {
+                    lat: data.results[0].latitude,
+                    lon: data.results[0].longitude,
+                    name: data.results[0].name,
+                    country: data.results[0].country || ''
+                };
+            }
+            return null;
+        }
+
+        async function getHistoricalWeather(lat, lon, days = 31) {
+            const endDate = new Date().toISOString().split('T')[0];
+            const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            
+            const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`;
+            
+            const response = await fetch(url);
+            return await response.json();
+        }
+
+        function analyzeWeatherData(weatherData) {
+            const tempsMax = weatherData.daily.temperature_2m_max;
+            const tempsMin = weatherData.daily.temperature_2m_min;
+            const precipitation = weatherData.daily.precipitation_sum;
+            
+            // Вся логика анализа
+            const avgTempMax = tempsMax.reduce((a, b) => a + b, 0) / tempsMax.length;
+            const avgTempMin = tempsMin.reduce((a, b) => a + b, 0) / tempsMin.length;
+            const avgTempAll = (avgTempMax + avgTempMin) / 2;
+            const maxTemp = Math.max(...tempsMax);
+            const minTemp = Math.min(...tempsMin);
+            
+            // Анализ тенденции
+            const half = Math.floor(tempsMax.length / 2);
+            const firstHalfAvgMax = tempsMax.slice(0, half).reduce((a, b) => a + b, 0) / half;
+            const secondHalfAvgMax = tempsMax.slice(half).reduce((a, b) => a + b, 0) / (tempsMax.length - half);
+            
+            const trend = secondHalfAvgMax > firstHalfAvgMax ? 'потепление' : 'похолодание';
+            const trendValue = Math.abs(secondHalfAvgMax - firstHalfAvgMax);
+            
+            // Прогноз на завтра
+            const lastWeekMax = tempsMax.slice(-7);
+            const lastWeekMin = tempsMin.slice(-7);
+            const lastWeekAvgMax = lastWeekMax.reduce((a, b) => a + b, 0) / lastWeekMax.length;
+            const lastWeekAvgMin = lastWeekMin.reduce((a, b) => a + b, 0) / lastWeekMin.length;
+            
+            const forecastMax = lastWeekAvgMax + (trend === 'потепление' ? trendValue * 0.3 : -trendValue * 0.3);
+            const forecastMin = lastWeekAvgMin + (trend === 'потепление' ? trendValue * 0.3 : -trendValue * 0.3);
+            const forecastAvg = (forecastMax + forecastMin) / 2;
+            
+            // Анализ осадков
+            const lastWeekPrecip = precipitation.slice(-7);
+            const avgPrecipitation = lastWeekPrecip.reduce((a, b) => a + b, 0) / lastWeekPrecip.length;
+            const forecastPrecipitation = Math.max(0, avgPrecipitation);
+            
+            const rainyDays = precipitation.filter(p => p > 0).length;
+            const totalPrecipitation = precipitation.reduce((a, b) => a + b, 0);
+            const maxDailyPrecipitation = Math.max(...precipitation);
+            
+            return {
+                avg_temp_all: Math.round(avgTempAll * 10) / 10,
+                max_temp: Math.round(maxTemp * 10) / 10,
+                min_temp: Math.round(minTemp * 10) / 10,
+                trend: trend,
+                trend_value: Math.round(trendValue * 10) / 10,
+                forecast_tomorrow_max: Math.round(forecastMax * 10) / 10,
+                forecast_tomorrow_min: Math.round(forecastMin * 10) / 10,
+                forecast_tomorrow_avg: Math.round(forecastAvg * 10) / 10,
+                forecast_precipitation: Math.round(forecastPrecipitation * 10) / 10,
+                rainy_days: rainyDays,
+                total_precipitation: Math.round(totalPrecipitation * 10) / 10,
+                max_daily_precipitation: Math.round(maxDailyPrecipitation * 10) / 10,
+                days_analyzed: tempsMax.length
+            };
+        }
+
+        function formatWeatherData(weatherData) {
+            return weatherData.daily.time.map((date, i) => ({
+                date: date,
+                temp_max: weatherData.daily.temperature_2m_max[i],
+                temp_min: weatherData.daily.temperature_2m_min[i],
+                precipitation: weatherData.daily.precipitation_sum[i]
+            }));
+        }
+
+        function displayWeather(data) {
+            document.getElementById('cityName').textContent = `Погода в ${data.city_name}, ${data.country}`;
+            
+            const tableBody = document.getElementById('weatherBody');
+            tableBody.innerHTML = '';
+            
+            data.weather_data.forEach(day => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${day.date}</td>
+                    <td>${day.temp_max.toFixed(1)}°C</td>
+                    <td>${day.temp_min.toFixed(1)}°C</td>
+                    <td>${day.precipitation} мм</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            const analysis = data.analysis;
+            
+            // Заполняем прогноз
+            document.getElementById('forecastMax').textContent = analysis.forecast_tomorrow_max;
+            document.getElementById('forecastMin').textContent = analysis.forecast_tomorrow_min;
+            document.getElementById('forecastAvg').textContent = analysis.forecast_tomorrow_avg;
+            document.getElementById('forecastPrecip').textContent = analysis.forecast_precipitation;
+            
+            // Заполняем анализ
+            document.getElementById('daysCount').textContent = analysis.days_analyzed;
+            document.getElementById('avgTemp').textContent = analysis.avg_temp_all;
+            document.getElementById('maxTemp').textContent = analysis.max_temp;
+            document.getElementById('minTemp').textContent = analysis.min_temp;
+            document.getElementById('trend').textContent = analysis.trend;
+            document.getElementById('rainyDays').textContent = analysis.rainy_days;
+            document.getElementById('totalPrecip').textContent = analysis.total_precipitation;
+            document.getElementById('maxDailyPrecip').textContent = analysis.max_daily_precipitation;
+            
+            document.getElementById('weatherResult').classList.remove('hidden');
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('weatherResult').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = `❌ ${message}`;
+            document.getElementById('error').classList.remove('hidden');
+            document.getElementById('weatherResult').classList.add('hidden');
+        }
+
+        document.getElementById('cityInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getWeather();
+            }
+        });
+    </script>
+</body>
+</html>
