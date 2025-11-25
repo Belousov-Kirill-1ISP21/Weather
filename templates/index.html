@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Погода</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🌤 Погода</h1>
+        
+        <div class="search-box">
+            <input type="text" id="cityInput" placeholder="Введите город (например: Moscow, London, Tokyo)...">
+            <button id="getWeatherBtn" onclick="getWeather()">Получить погоду</button>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <p>🔍 Ищем город и загружаем данные...</p>
+        </div>
+
+        <div id="error" class="error hidden"></div>
+
+        <div id="weatherResult" class="hidden">
+            <div class="city-header">
+                <h2 id="cityName"></h2>
+            </div>
+            
+            <div class="weather-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Макс. температура</th>
+                            <th>Мин. температура</th>
+                            <th>Осадки (мм)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weatherBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="forecast">
+                <h3>📊 Прогноз на завтра</h3>
+                <p>Ожидаемая максимальная температура: <strong id="forecastTemp"></strong></p>
+                <small>Расчет на основе среднего значения за последние 5 дней</small>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
