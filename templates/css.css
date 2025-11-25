@@ -1,0 +1,142 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+h1 {
+    text-align: center;
+    color: #2d3436;
+    margin-bottom: 30px;
+    font-size: 2.2em;
+}
+
+.search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+#cityInput {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+#cityInput:focus {
+    border-color: #74b9ff;
+}
+
+button {
+    padding: 12px 25px;
+    background: #00b894;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #00a085;
+}
+
+button:disabled {
+    background: #b2bec3;
+    cursor: not-allowed;
+}
+
+.weather-info {
+    margin-top: 20px;
+}
+
+.city-header {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #2d3436;
+}
+
+.weather-table {
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #2d3436;
+}
+
+tr:hover {
+    background-color: #f8f9fa;
+}
+
+.forecast {
+    background: #e8f4fd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+}
+
+.error {
+    color: #d63031;
+    text-align: center;
+    padding: 20px;
+    background: #ffeaa7;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #636e72;
+}
+
+@media (max-width: 600px) {
+    .search-box {
+        flex-direction: column;
+    }
+    
+    .container {
+        padding: 20px;
+        margin: 10px;
+    }
+}
